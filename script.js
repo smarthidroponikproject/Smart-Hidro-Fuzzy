@@ -1,5 +1,11 @@
-const GEMINI_API_KEY = 'AQ.Ab8RN6Lue_q-bGf10S_lywqQMybUATit3ZzY3-9BFZbQYU4HjQ'; // <-- GANTI DENGAN KUNCI API GOOGLE STUDIO ANDA
+// ==========================================
+// PENGATURAN KUNCI API AI (GEMINI)
+// ==========================================
+const GEMINI_API_KEY = 'AQ.Ab8RN6Lue_q-bGf10S_lywqQMybUATit3ZzY3-9BFZbQYU4HjQ'; 
 
+// ==========================================
+// PENGATURAN MQTT
+// ==========================================
 const brokerUrl = 'wss://broker.emqx.io:8084/mqtt'; 
 const topicSensor = 'hidroponik/projek_kkn_2026/sensors';
 const topicControl = 'hidroponik/projek_kkn_2026/control';
@@ -10,11 +16,14 @@ const client = mqtt.connect(brokerUrl, { clientId: clientId });
 
 let currentMode = 'auto';
 let relayStates = { airBersih: 'OFF', phUp: 'OFF', phDown: 'OFF', nutAB: 'OFF', exhaust: 'OFF' };
-let latestSensorData = null; // Menyimpan data sensor terakhir untuk AI
+let latestSensorData = null; // Menyimpan data sensor terakhir untuk dibaca AI
 
 let sessionData = []; 
 let offlineTimer;
 
+// ==========================================
+// FUNGSI LOG AKTIVITAS & STATUS ALAT
+// ==========================================
 function addLog(message) {
   const time = new Date().toLocaleTimeString('id-ID');
   const logBox = document.getElementById('event-log');
@@ -30,6 +39,7 @@ function setDeviceOnline() {
   espStatus.style.color = '#285430';
   
   clearTimeout(offlineTimer);
+  // Jika 15 detik tidak ada data masuk, anggap ESP32 mati/offline
   offlineTimer = setTimeout(() => {
     espStatus.innerText = 'Alat: Offline (No Data)';
     espStatus.style.backgroundColor = '#ffcccc';
@@ -38,6 +48,9 @@ function setDeviceOnline() {
   }, 15000); 
 }
 
+// ==========================================
+// KONEKSI MQTT & PENERIMAAN DATA
+// ==========================================
 client.on('connect', () => {
   const webStatus = document.getElementById('web-status');
   webStatus.innerText = 'Dashboard Terhubung (MQTT)';
@@ -60,6 +73,7 @@ function checkStatus(value, min, max, type) {
 }
 
 client.on('message', (topic, message) => {
+  // Menangkap pesan LWT (Last Will & Testament) jika ESP32 putus daya
   if (topic === topicStatus) {
     const msgString = message.toString();
     if (msgString === 'Offline') {
@@ -72,10 +86,11 @@ client.on('message', (topic, message) => {
     }
   }
 
+  // Menangkap data sensor rutin
   if (topic === topicSensor) {
     try {
       const data = JSON.parse(message.toString());
-      latestSensorData = data; // Update data untuk AI
+      latestSensorData = data; 
       const timeStr = new Date().toLocaleTimeString('id-ID');
       
       setDeviceOnline();
@@ -89,12 +104,14 @@ client.on('message', (topic, message) => {
       const tWaterMax = parseFloat(document.getElementById('set-waterTempMax').value);
       const tHumMax = parseFloat(document.getElementById('set-humMax').value);
 
+      // Evaluasi status aman/bahaya
       const statPh = checkStatus(data.ph, tPhMin, tPhMax, 'range');
       const statTds = checkStatus(data.tds, tTdsMin, tTdsMax, 'range');
       const statWater = checkStatus(data.water_temp, 0, tWaterMax, 'maxOnly');
       const statAir = checkStatus(data.air_temp, 0, tTempMax, 'maxOnly');
       const statHum = checkStatus(data.humidity, 0, tHumMax, 'maxOnly');
 
+      // Tampilkan angka ke UI Web
       document.getElementById('val-ph').innerText = data.ph.toFixed(1);
       document.getElementById('val-ph').className = `value ${statPh.class}`;
       document.getElementById('stat-ph').innerHTML = `<span class="${statPh.class}">${statPh.text}</span>`;
@@ -116,6 +133,7 @@ client.on('message', (topic, message) => {
       document.getElementById('val-hum').className = `value ${statHum.class}`;
       document.getElementById('stat-hum').innerHTML = `<span class="${statHum.class}">${statHum.text}</span>`;
 
+      // Sinkronisasi angka input threshold jika dikirim oleh ESP32
       if (data.phMin !== undefined) {
         document.getElementById('set-phMin').value = data.phMin;
         document.getElementById('set-phMax').value = data.phMax;
@@ -126,14 +144,17 @@ client.on('message', (topic, message) => {
         document.getElementById('set-humMax').value = data.humMax;
       }
 
+      // Simpan riwayat untuk Export CSV
       sessionData.push({ time: timeStr, ph: data.ph, tds: data.tds, waterTemp: data.water_temp, airTemp: data.air_temp, hum: data.humidity });
 
+      // Cek perubahan mode
       if(currentMode !== data.mode) {
         currentMode = data.mode;
         addLog(`Mode sistem berubah menjadi: ${currentMode.toUpperCase()}`);
         updateModeUI();
       }
 
+      // Cek perubahan status relay
       const newRelayStates = { airBersih: data.relay_air, phUp: data.relay_ph_up, phDown: data.relay_ph_down, nutAB: data.relay_nut_ab, exhaust: data.relay_exhaust };
       for (const key in newRelayStates) {
         if (newRelayStates[key] !== relayStates[key]) {
@@ -147,6 +168,9 @@ client.on('message', (topic, message) => {
   }
 });
 
+// ==========================================
+// FUNGSI PANEL KONTROL & PENGATURAN
+// ==========================================
 function setMode(mode) { client.publish(topicControl, JSON.stringify({ mode: mode })); }
 
 function toggleRelay(relayId) {
@@ -200,7 +224,8 @@ function updateRelayUI() {
 // ==========================================
 function toggleChat() {
   const chatWindow = document.getElementById('chat-window');
-  chatWindow.classList.toggle('hidden');
+  // Menggunakan class 'active' agar pop-up berfungsi sebagaimana mestinya
+  chatWindow.classList.toggle('active'); 
 }
 
 function handleChatEnter(event) {
@@ -252,7 +277,6 @@ function appendMessage(className, text) {
   const msgContainer = document.getElementById('chat-messages');
   const msgDiv = document.createElement('div');
   msgDiv.className = `msg ${className}`;
-  // Format line breaks
   msgDiv.innerHTML = text.replace(/\n/g, '<br>');
   msgDiv.id = 'msg-' + Date.now();
   msgContainer.appendChild(msgDiv);
