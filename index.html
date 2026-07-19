@@ -12,17 +12,15 @@
   <div class="container">
     <div class="header">
       <h1>Monitoring Smart Hidroponik</h1>
-      <p>Sistem Kontrol dan Pemantauan Kualitas Air Otomatis</p>
+      <p>Sistem Kontrol Cerdas Berbasis Logika Fuzzy & AI</p>
     </div>
 
-    <!-- Status Koneksi & Waktu -->
     <div class="status-container">
       <div id="web-status">Dashboard Terputus</div>
       <div id="esp-status">Alat Offline</div>
     </div>
     <div class="timestamp">Pembaruan Terakhir: <span id="last-update">Belum ada data</span></div>
 
-    <!-- Kartu Sensor -->
     <div class="grid">
       <div class="card">
         <h3>pH Air</h3>
@@ -51,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Panel Kontrol -->
     <div class="panel">
       <h2>Panel Kontrol</h2>
       <div class="mode-toggle">
@@ -68,7 +65,6 @@
       </div>
     </div>
 
-    <!-- Panel Log & Ekspor CSV -->
     <div class="panel">
       <div class="panel-header">
         <h2>Log Aktivitas</h2>
@@ -79,40 +75,34 @@
       </div>
     </div>
 
-    <!-- Panel Pengaturan Threshold -->
     <div class="panel">
       <h2>Pengaturan Threshold (Batas Otomatis)</h2>
       <div class="settings-grid">
-        <div class="input-group">
-          <label>Batas pH Bawah (Min)</label>
-          <input type="number" id="set-phMin" step="0.1" value="5.5">
-        </div>
-        <div class="input-group">
-          <label>Batas pH Atas (Max)</label>
-          <input type="number" id="set-phMax" step="0.1" value="6.5">
-        </div>
-        <div class="input-group">
-          <label>Batas TDS Bawah (Min)</label>
-          <input type="number" id="set-tdsMin" value="800">
-        </div>
-        <div class="input-group">
-          <label>Batas TDS Atas (Max)</label>
-          <input type="number" id="set-tdsMax" value="1400">
-        </div>
-        <div class="input-group">
-          <label>Batas Suhu Udara (°C)</label>
-          <input type="number" id="set-tempMax" step="0.1" value="30.0">
-        </div>
-        <div class="input-group">
-          <label>Batas Suhu Air (°C)</label>
-          <input type="number" id="set-waterTempMax" step="0.1" value="28.0">
-        </div>
-        <div class="input-group">
-          <label>Batas Kelembapan (%)</label>
-          <input type="number" id="set-humMax" step="0.1" value="80.0">
-        </div>
+        <div class="input-group"><label>Batas pH Bawah (Min)</label><input type="number" id="set-phMin" step="0.1" value="5.5"></div>
+        <div class="input-group"><label>Batas pH Atas (Max)</label><input type="number" id="set-phMax" step="0.1" value="6.5"></div>
+        <div class="input-group"><label>Batas TDS Bawah (Min)</label><input type="number" id="set-tdsMin" value="800"></div>
+        <div class="input-group"><label>Batas TDS Atas (Max)</label><input type="number" id="set-tdsMax" value="1400"></div>
+        <div class="input-group"><label>Batas Suhu Udara (°C)</label><input type="number" id="set-tempMax" step="0.1" value="30.0"></div>
+        <div class="input-group"><label>Batas Suhu Air (°C)</label><input type="number" id="set-waterTempMax" step="0.1" value="28.0"></div>
+        <div class="input-group"><label>Batas Kelembapan (%)</label><input type="number" id="set-humMax" step="0.1" value="80.0"></div>
       </div>
       <button class="btn btn-save" onclick="saveSettings()">Simpan Pengaturan</button>
+    </div>
+  </div>
+
+  <!-- Chat Widget AI -->
+  <button id="chat-toggle" onclick="toggleChat()">💬 Tanya AI</button>
+  <div id="chat-window" class="hidden">
+    <div class="chat-header">
+      <h3>Asisten Hidroponik AI</h3>
+      <button onclick="toggleChat()">✖</button>
+    </div>
+    <div id="chat-messages">
+      <div class="msg ai-msg">Halo! Saya Asisten AI Anda. Saya bisa membaca kondisi air dan lingkungan secara langsung. Ada yang ingin ditanyakan?</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ketik pertanyaan Anda..." onkeypress="handleChatEnter(event)">
+      <button onclick="sendChatMessage()">Kirim</button>
     </div>
   </div>
 
