@@ -1,3 +1,6 @@
+/* ==========================================
+   VARIABEL PALET WARNA UTAMA
+   ========================================== */
 :root {
   --bg-color: #E5D9B6;
   --light-green: #A4BE7B;
@@ -8,6 +11,9 @@
   --warning: #f57c00;
 }
 
+/* ==========================================
+   PENGATURAN DASAR
+   ========================================== */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--bg-color);
@@ -21,8 +27,14 @@ body {
   margin: 0 auto;
 }
 
-.header { text-align: center; margin-bottom: 20px; }
+.header { 
+  text-align: center; 
+  margin-bottom: 20px; 
+}
 
+/* ==========================================
+   STATUS & TIMESTAMP
+   ========================================== */
 .status-container {
   display: flex;
   justify-content: center;
@@ -42,14 +54,28 @@ body {
 }
 
 .timestamp {
-  text-align: center; font-size: 0.9rem; font-style: italic; margin-bottom: 25px; color: #555;
+  text-align: center; 
+  font-size: 0.9rem; 
+  font-style: italic; 
+  margin-bottom: 25px; 
+  color: #555;
 }
 
+/* ==========================================
+   INDIKATOR TEKS SENSOR (WARNA)
+   ========================================== */
 .text-safe { color: var(--mid-green) !important; font-weight: bold;}
 .text-warning { color: var(--warning) !important; font-weight: bold;}
-.text-danger { color: var(--danger) !important; font-weight: bold; animation: blink 1.5s infinite; }
+.text-danger { 
+  color: var(--danger) !important; 
+  font-weight: bold; 
+  animation: blink 1.5s infinite; 
+}
 @keyframes blink { 50% { opacity: 0.5; } }
 
+/* ==========================================
+   KARTU DATA SENSOR
+   ========================================== */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -79,6 +105,9 @@ body {
   display: inline-block;
 }
 
+/* ==========================================
+   PANEL KONTROL UMUM
+   ========================================== */
 .panel {
   background-color: var(--white);
   padding: 20px;
@@ -86,11 +115,15 @@ body {
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-bottom: 20px;
 }
+
 .panel h2 { 
   margin-top: 0; color: var(--dark-green); 
   border-bottom: 2px solid var(--light-green); padding-bottom: 10px; 
 }
 
+/* ==========================================
+   LOG AKTIVITAS & EKSPOR
+   ========================================== */
 .panel-header {
   display: flex; justify-content: space-between; align-items: center;
   border-bottom: 2px solid var(--light-green); padding-bottom: 10px; margin-bottom: 15px;
@@ -103,6 +136,9 @@ body {
 }
 .log-box div { border-bottom: 1px dashed #ccc; padding: 5px 0; }
 
+/* ==========================================
+   TOMBOL (BUTTONS)
+   ========================================== */
 .btn {
   padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer;
   font-weight: bold; background-color: var(--light-green); color: var(--dark-green);
@@ -114,6 +150,9 @@ body {
 .btn-export { width: auto; padding: 8px 15px; background-color: var(--dark-green); color: white;}
 .btn-save { background-color: var(--dark-green); color: var(--white); margin-top: 15px; }
 
+/* ==========================================
+   GRID INPUT & RELAY
+   ========================================== */
 .mode-toggle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
 .mode-toggle .btn { width: auto; margin: 0; }
 .relay-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
@@ -121,6 +160,9 @@ body {
 .input-group label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; }
 .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
 
+/* ==========================================
+   RESPONSIVITAS MOBILE
+   ========================================== */
 @media (max-width: 768px) {
   body { padding: 10px; }
   .grid { grid-template-columns: 1fr 1fr; }
@@ -129,7 +171,10 @@ body {
   .mode-toggle .btn { width: 100%; margin-top: 5px; }
   .panel-header { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
-/* --- AI CHAT WIDGET STYLES --- */
+
+/* ==========================================
+   WIDGET AI CHATBOT MENGAMBANG
+   ========================================== */
 #chat-toggle {
   position: fixed;
   bottom: 20px;
@@ -186,7 +231,13 @@ body {
   background-color: #f5f5f5;
 }
 
-.msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; line-height: 1.4; }
+.msg { 
+  padding: 10px 15px; 
+  border-radius: 15px; 
+  max-width: 80%; 
+  font-size: 0.9rem; 
+  line-height: 1.4; 
+}
 .ai-msg { background-color: var(--bg-color); color: var(--dark-green); align-self: flex-start; border-bottom-left-radius: 0; }
 .user-msg { background-color: var(--light-green); color: var(--dark-green); align-self: flex-end; border-bottom-right-radius: 0; }
 .sys-msg { background-color: transparent; color: #888; font-size: 0.8rem; align-self: center; font-style: italic;}
@@ -200,6 +251,7 @@ body {
 .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
 .chat-input-area button { margin-left: 10px; padding: 10px 15px; background-color: var(--dark-green); color: white; border: none; border-radius: 5px; cursor: pointer; }
 
+/* Responsivitas Chat Widget di HP */
 @media (max-width: 600px) {
   #chat-window { width: 90%; right: 5%; bottom: 80px; height: 60vh; }
 }
