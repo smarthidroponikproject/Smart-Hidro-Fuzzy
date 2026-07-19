@@ -1,6 +1,7 @@
 const brokerUrl = 'wss://broker.emqx.io:8084/mqtt'; 
 const topicSensor = 'hidroponik/projek_kkn_2026/sensors';
 const topicControl = 'hidroponik/projek_kkn_2026/control';
+const topicStatus = 'hidroponik/projek_kkn_2026/status';
 
 const clientId = 'WebClient_' + Math.random().toString(16).substr(2, 8);
 const client = mqtt.connect(brokerUrl, { clientId: clientId });
@@ -41,6 +42,7 @@ client.on('connect', () => {
   webStatus.style.color = '#285430';
   
   client.subscribe(topicSensor);
+  client.subscribe(topicStatus);
   addLog("Terhubung ke Server MQTT. Menunggu pengiriman data pertama...");
 });
 
@@ -55,6 +57,20 @@ function checkStatus(value, min, max, type) {
 }
 
 client.on('message', (topic, message) => {
+  // Menangkap LWT (Last Will and Testament) saat ESP32 mati tiba-tiba
+  if (topic === topicStatus) {
+    const msgString = message.toString();
+    if (msgString === 'Offline') {
+      const espStatus = document.getElementById('esp-status');
+      espStatus.innerText = 'Alat: Offline';
+      espStatus.style.backgroundColor = '#ffcccc';
+      espStatus.style.color = '#cc0000';
+      clearTimeout(offlineTimer);
+      addLog("PERINGATAN: ESP32 terputus dari jaringan (Offline).");
+    }
+  }
+
+  // Menangkap data rutin dari ESP32
   if (topic === topicSensor) {
     try {
       const data = JSON.parse(message.toString());
@@ -98,6 +114,18 @@ client.on('message', (topic, message) => {
       document.getElementById('val-hum').className = `value ${statHum.class}`;
       document.getElementById('stat-hum').innerHTML = `<span class="${statHum.class}">${statHum.text}</span>`;
 
+      // --- SINKRONISASI THRESHOLD OTOMATIS DARI ESP32 ---
+      if (data.phMin !== undefined) {
+        document.getElementById('set-phMin').value = data.phMin;
+        document.getElementById('set-phMax').value = data.phMax;
+        document.getElementById('set-tdsMin').value = data.tdsMin;
+        document.getElementById('set-tdsMax').value = data.tdsMax;
+        document.getElementById('set-tempMax').value = data.tempMax;
+        document.getElementById('set-waterTempMax').value = data.waterTempMax;
+        document.getElementById('set-humMax').value = data.humMax;
+      }
+      // --------------------------------------------------
+
       sessionData.push({ time: timeStr, ph: data.ph, tds: data.tds, waterTemp: data.water_temp, airTemp: data.air_temp, hum: data.humidity });
 
       if(currentMode !== data.mode) {
@@ -136,8 +164,8 @@ function saveSettings() {
     humMax: parseFloat(document.getElementById('set-humMax').value)
   });
   client.publish(topicControl, payload);
-  addLog("Pengaturan Threshold dikirim ke alat.");
-  alert("Pengaturan berhasil dikirim!");
+  addLog("Pengaturan Threshold dikirim ke ESP32.");
+  alert("Pengaturan berhasil disimpan di memori ESP32!");
 }
 
 function exportCSV() {
@@ -149,7 +177,7 @@ function exportCSV() {
   link.href = URL.createObjectURL(blob);
   link.download = `Data_Hidroponik_${new Date().toLocaleDateString('id-ID')}.csv`;
   link.click();
-  addLog("Data diunduh (CSV).");
+  addLog("Data sensor berhasil diunduh (CSV).");
 }
 
 function updateModeUI() {
