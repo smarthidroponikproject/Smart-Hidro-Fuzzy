@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Smart Hidroponik</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Monitoring Smart Hidroponik</h1>
+      <p>Sistem Kontrol dan Pemantauan Kualitas Air Otomatis</p>
+    </div>
+
+    <!-- Status Koneksi & Waktu -->
+    <div class="status-container">
+      <div id="web-status">Dashboard Terputus</div>
+      <div id="esp-status">Alat Offline</div>
+    </div>
+    <div class="timestamp">Pembaruan Terakhir: <span id="last-update">Belum ada data</span></div>
+
+    <!-- Kartu Sensor -->
+    <div class="grid">
+      <div class="card">
+        <h3>pH Air</h3>
+        <div class="value" id="val-ph">--</div>
+        <div class="status-label" id="stat-ph">Menunggu Data...</div>
+      </div>
+      <div class="card">
+        <h3>TDS</h3>
+        <div class="value"><span id="val-tds">--</span> <span class="unit">ppm</span></div>
+        <div class="status-label" id="stat-tds">Menunggu Data...</div>
+      </div>
+      <div class="card">
+        <h3>Suhu Air</h3>
+        <div class="value"><span id="val-watertemp">--</span> <span class="unit">°C</span></div>
+        <div class="status-label" id="stat-watertemp">Menunggu Data...</div>
+      </div>
+      <div class="card">
+        <h3>Suhu Udara</h3>
+        <div class="value"><span id="val-airtemp">--</span> <span class="unit">°C</span></div>
+        <div class="status-label" id="stat-airtemp">Menunggu Data...</div>
+      </div>
+      <div class="card">
+        <h3>Kelembapan</h3>
+        <div class="value"><span id="val-hum">--</span> <span class="unit">%</span></div>
+        <div class="status-label" id="stat-hum">Menunggu Data...</div>
+      </div>
+    </div>
+
+    <!-- Panel Kontrol -->
+    <div class="panel">
+      <h2>Panel Kontrol</h2>
+      <div class="mode-toggle">
+        <strong>Mode Sistem: </strong>
+        <button id="btn-auto" class="btn" onclick="setMode('auto')">AUTO</button>
+        <button id="btn-manual" class="btn" onclick="setMode('manual')">MANUAL</button>
+      </div>
+      <div class="relay-grid">
+        <button id="rel-airBersih" class="btn" onclick="toggleRelay('airBersih')" disabled>Air Bersih: OFF</button>
+        <button id="rel-phUp" class="btn" onclick="toggleRelay('phUp')" disabled>pH Up: OFF</button>
+        <button id="rel-phDown" class="btn" onclick="toggleRelay('phDown')" disabled>pH Down: OFF</button>
+        <button id="rel-nutAB" class="btn" onclick="toggleRelay('nutAB')" disabled>Nutrisi AB: OFF</button>
+        <button id="rel-exhaust" class="btn" onclick="toggleRelay('exhaust')" disabled>Exhaust: OFF</button>
+      </div>
+    </div>
+
+    <!-- Panel Log & Ekspor CSV -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Log Aktivitas</h2>
+        <button class="btn btn-export" onclick="exportCSV()">Unduh Data (CSV)</button>
+      </div>
+      <div id="event-log" class="log-box">
+        <div>Sistem dimulai... Menunggu data MQTT.</div>
+      </div>
+    </div>
+
+    <!-- Panel Pengaturan Threshold -->
+    <div class="panel">
+      <h2>Pengaturan Threshold (Batas Otomatis)</h2>
+      <div class="settings-grid">
+        <div class="input-group">
+          <label>Batas pH Bawah (Min)</label>
+          <input type="number" id="set-phMin" step="0.1" value="5.5">
+        </div>
+        <div class="input-group">
+          <label>Batas pH Atas (Max)</label>
+          <input type="number" id="set-phMax" step="0.1" value="6.5">
+        </div>
+        <div class="input-group">
+          <label>Batas TDS Bawah (Min)</label>
+          <input type="number" id="set-tdsMin" value="800">
+        </div>
+        <div class="input-group">
+          <label>Batas TDS Atas (Max)</label>
+          <input type="number" id="set-tdsMax" value="1400">
+        </div>
+        <div class="input-group">
+          <label>Batas Suhu Udara (°C)</label>
+          <input type="number" id="set-tempMax" step="0.1" value="30.0">
+        </div>
+        <div class="input-group">
+          <label>Batas Suhu Air (°C)</label>
+          <input type="number" id="set-waterTempMax" step="0.1" value="28.0">
+        </div>
+        <div class="input-group">
+          <label>Batas Kelembapan (%)</label>
+          <input type="number" id="set-humMax" step="0.1" value="80.0">
+        </div>
+      </div>
+      <button class="btn btn-save" onclick="saveSettings()">Simpan Pengaturan</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
