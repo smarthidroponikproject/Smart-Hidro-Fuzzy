@@ -1,3 +1,5 @@
+const GEMINI_API_KEY = 'AQ.Ab8RN6Lue_q-bGf10S_lywqQMybUATit3ZzY3-9BFZbQYU4HjQ'; // <-- GANTI DENGAN KUNCI API GOOGLE STUDIO ANDA
+
 const brokerUrl = 'wss://broker.emqx.io:8084/mqtt'; 
 const topicSensor = 'hidroponik/projek_kkn_2026/sensors';
 const topicControl = 'hidroponik/projek_kkn_2026/control';
@@ -8,6 +10,7 @@ const client = mqtt.connect(brokerUrl, { clientId: clientId });
 
 let currentMode = 'auto';
 let relayStates = { airBersih: 'OFF', phUp: 'OFF', phDown: 'OFF', nutAB: 'OFF', exhaust: 'OFF' };
+let latestSensorData = null; // Menyimpan data sensor terakhir untuk AI
 
 let sessionData = []; 
 let offlineTimer;
@@ -57,7 +60,6 @@ function checkStatus(value, min, max, type) {
 }
 
 client.on('message', (topic, message) => {
-  // Menangkap LWT (Last Will and Testament) saat ESP32 mati tiba-tiba
   if (topic === topicStatus) {
     const msgString = message.toString();
     if (msgString === 'Offline') {
@@ -70,10 +72,10 @@ client.on('message', (topic, message) => {
     }
   }
 
-  // Menangkap data rutin dari ESP32
   if (topic === topicSensor) {
     try {
       const data = JSON.parse(message.toString());
+      latestSensorData = data; // Update data untuk AI
       const timeStr = new Date().toLocaleTimeString('id-ID');
       
       setDeviceOnline();
@@ -114,7 +116,6 @@ client.on('message', (topic, message) => {
       document.getElementById('val-hum').className = `value ${statHum.class}`;
       document.getElementById('stat-hum').innerHTML = `<span class="${statHum.class}">${statHum.text}</span>`;
 
-      // --- SINKRONISASI THRESHOLD OTOMATIS DARI ESP32 ---
       if (data.phMin !== undefined) {
         document.getElementById('set-phMin').value = data.phMin;
         document.getElementById('set-phMax').value = data.phMax;
@@ -124,7 +125,6 @@ client.on('message', (topic, message) => {
         document.getElementById('set-waterTempMax').value = data.waterTempMax;
         document.getElementById('set-humMax').value = data.humMax;
       }
-      // --------------------------------------------------
 
       sessionData.push({ time: timeStr, ph: data.ph, tds: data.tds, waterTemp: data.water_temp, airTemp: data.air_temp, hum: data.humidity });
 
@@ -193,4 +193,69 @@ function updateRelayUI() {
     btn.innerText = `${label}: ${relayStates[id.replace('rel-', '')]}`;
     btn.classList.toggle('active', relayStates[id.replace('rel-', '')] === 'ON');
   }
+}
+
+// ==========================================
+// LOGIKA AI CHATBOT (GEMINI API)
+// ==========================================
+function toggleChat() {
+  const chatWindow = document.getElementById('chat-window');
+  chatWindow.classList.toggle('hidden');
+}
+
+function handleChatEnter(event) {
+  if (event.key === 'Enter') sendChatMessage();
+}
+
+async function sendChatMessage() {
+  const inputEl = document.getElementById('chat-input');
+  const message = inputEl.value.trim();
+  if (!message) return;
+
+  appendMessage('user-msg', message);
+  inputEl.value = '';
+  
+  const typingId = appendMessage('sys-msg', 'AI sedang menganalisis sensor...');
+
+  // Siapkan konteks sensor untuk disuntikkan ke AI
+  let sensorContext = "Belum ada data sensor.";
+  if (latestSensorData) {
+    sensorContext = `Data Sensor Saat Ini: pH=${latestSensorData.ph.toFixed(1)}, TDS=${latestSensorData.tds}ppm, Suhu Air=${latestSensorData.water_temp.toFixed(1)}C, Suhu Udara=${latestSensorData.air_temp.toFixed(1)}C, Kelembapan=${latestSensorData.humidity.toFixed(0)}%. Mode Sistem=${currentMode}. Status Pompa: Air Bersih=${relayStates.airBersih}, Nutrisi=${relayStates.nutAB}, pH Up=${relayStates.phUp}, pH Down=${relayStates.phDown}, Exhaust=${relayStates.exhaust}.`;
+  }
+
+  const prompt = `Anda adalah Asisten Hidroponik AI cerdas untuk proyek KKN mahasiswa. Anda ramah, membantu, dan menggunakan bahasa Indonesia yang baik. Jawab pertanyaan pengguna secara ringkas, jelas, dan santai, maksimal 2-3 paragraf pendek. JANGAN membuat format tebal (bold) berlebihan. Gunakan konteks data alat hidroponik berikut untuk menjawab secara akurat jika relevan. \n\n${sensorContext}\n\nPertanyaan Pengguna: ${message}`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+
+    const data = await response.json();
+    document.getElementById(typingId).remove(); // Hapus tulisan typing
+
+    if (data.candidates && data.candidates.length > 0) {
+      const aiReply = data.candidates[0].content.parts[0].text;
+      appendMessage('ai-msg', aiReply);
+    } else {
+      appendMessage('ai-msg', 'Maaf, saya tidak bisa memproses pertanyaan tersebut saat ini.');
+    }
+  } catch (error) {
+    console.error(error);
+    document.getElementById(typingId).remove();
+    appendMessage('ai-msg', 'Gagal terhubung ke server AI. Pastikan API Key Anda sudah benar.');
+  }
+}
+
+function appendMessage(className, text) {
+  const msgContainer = document.getElementById('chat-messages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `msg ${className}`;
+  // Format line breaks
+  msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+  msgDiv.id = 'msg-' + Date.now();
+  msgContainer.appendChild(msgDiv);
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+  return msgDiv.id;
 }
